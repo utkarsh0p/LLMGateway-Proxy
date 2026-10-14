@@ -1,0 +1,3 @@
+# LiteLLM proxy server (pinned to the version this config was built against).
+# The [proxy] extra pulls in the FastAPI/uvicorn server, the CLI and the router.
+litellm[proxy]==1.105.1
