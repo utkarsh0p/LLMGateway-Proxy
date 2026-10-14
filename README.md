@@ -22,8 +22,23 @@ cp .env.example .env   # then fill in both keys
 ## Run
 
 ```bash
-litellm --config config.yaml --port 4000
+./start.sh
 ```
+
+`start.sh` strips whitespace from `GOOGLE_API_KEY` and `LITELLM_MASTER_KEY`
+before launching LiteLLM, then execs `litellm --config config.yaml`. Set `PORT`
+to override the default of 4000.
+
+Do not start `litellm` directly in a deployment. A key pasted into a hosting
+dashboard easily picks up a trailing newline, and LiteLLM passes the value
+straight into the outbound `x-goog-api-key` header, where aiohttp rejects it:
+
+```
+ValueError: Forbidden control character detected in headers.
+```
+
+Every request then fails with a 500 and nothing is ever sent to Google, so the
+logs show a Python traceback and no upstream error at all.
 
 ## Use
 
@@ -61,6 +76,12 @@ tier if the preview model fails.
 - `GET /health/liveliness` — unauthenticated liveness probe
 - `GET /v1/models` — list the configured model names
 - `POST /v1/chat/completions`, `POST /v1/embeddings` — OpenAI-compatible
+
+## Deployment
+
+Deployed on Railway as `LLMGateway-Proxy`, built from `main` with Railpack.
+`railway.json` pins the start command to `bash start.sh`; set `GOOGLE_API_KEY`
+and `LITELLM_MASTER_KEY` as service variables there.
 
 Never commit `.env` — it is gitignored, and `.env.example` documents the keys instead.
 # LLMGateway-Proxy
